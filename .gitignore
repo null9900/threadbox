@@ -3,3 +3,5 @@
 *.cmd
 *.o
 *__pycache__
+*.png
+
