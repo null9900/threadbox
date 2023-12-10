@@ -17,9 +17,8 @@ def open_server_port_3000():
 def create_another_process():
     subprocess.Popen(["sleep", "1"])
 
-@PERM("bind_socket",80)
 def main():
-    open_server_port_80();
+    #open_server_port_80();
     open_server_port_3000();
     create_another_process();
 

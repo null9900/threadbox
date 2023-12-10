@@ -2,57 +2,62 @@
 #include "thread.h"
 
 int add_sandbox_ps(int pid){
-  return sandbox_ps(pid);
-}
-
-int check_listen_port(int pid, int tid, int port){
-  return check_thread_listen_port(pid, tid, port); 
-}
-
-int check_bind_port(int pid, int tid, int port){
-  return check_thread_bind_port(pid, tid, port);
-}
-
-int check_ioctl(int pid, int tid, int ioctl){
-  return check_thread_ioctl(pid, tid, ioctl);
-}
-
-int check_fcntl(int pid, int tid, int fcntl){
-  return check_thread_fcntl(pid, tid, fcntl);
-}
-
-int check_all(int pid, int tid){
-  return check_thread_all(pid, tid);
-}
-
-int check_fork(int pid, int tid){
-  return check_thread_fork(pid, tid);
-}
-
-void restrict_listen_port(int pid, int tid, int port){
-  perm_port_listen(pid, tid, port); 
-}
-
-void restrict_bind_port(int pid, int tid, int port){
-  perm_port_bind(pid, tid, port);
-}
-
-void restrict_ioctl(int pid, int tid, int ioctl){
-  perm_ioctl(pid, tid, ioctl);
-}
-
-void restrict_fcntl(int pid, int tid, int fcntl){
-  perm_fcntl(pid, tid, fcntl);
-}
-
-void restrict_all(int pid, int tid){
-  perm_disable(pid, tid);
-}
-
-void restrict_fork(int pid, int tid){
-  perm_fork(pid, tid);
+  for(int i =0;i<MAX_SIZE;i++){
+    if(sandboxed_ps[i]==-1){
+      sandboxed_ps[i]=pid;
+      return 1;
+    }
+  }
+  return 0;
 }
 
 void remove_sandbox(int pid, int tid){
-  perm_remove(pid, tid);
+  int ps = check_process(pid);
+  if(ps==0) return;
+  int index = get_thread(tid,0);
+  if(index==-1) return;
+  threads_list[index].disable_all = 1;
+  threads_list[index].sandboxed = 0;
+}
+
+int check_bind_port(int pid, int tid, int port){ 
+  int ps = check_process(pid);
+  if(ps==0) return 1;
+  int index = get_thread(tid,0);
+  if(index==-1) return 1;
+  if(threads_list[index].allowed_port_bind!=port)
+    return -1;
+  return 0;
+}
+
+int check_fork(int pid, int tid){
+  int ps = check_process(pid);
+  if(ps==0) return 1;
+  int index = get_thread(tid,0);
+  if(index==-1) return 1;
+  if(threads_list[index].allowed_fork!=1)
+    return -1;
+  return 0;
+}
+
+void restrict_bind_port(int pid, int tid, int port){
+  int ps = check_process(pid);
+  if(ps==0) return;
+  int index = get_thread(tid,1);
+  if(threads_list[index].sandboxed == 1){
+    return;
+  }
+  threads_list[index].allowed_port_bind=port;
+  threads_list[index].sandboxed = 1;
+}
+
+void restrict_fork(int pid, int tid){
+  int ps = check_process(pid);
+  if(ps==0) return;
+  int index = get_thread(tid,1);
+  if(threads_list[index].sandboxed == 1){
+    return;
+  }
+  threads_list[index].allowed_fork = 1;
+  threads_list[index].sandboxed = 1;
 }

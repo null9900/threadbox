@@ -2,3 +2,4 @@
 *.order
 *.cmd
 *.o
+*__pycache__

@@ -13,21 +13,10 @@ typedef struct{
   int sandboxed;
 } Thread;
 
-int sandbox_ps(int pid);
+extern Thread threads_list[MAX_SIZE];
+extern int sandboxed_ps[MAX_SIZE];
+extern int t_index;
 
-int check_thread_listen_port(int pid, int tid, int port);
-int check_thread_bind_port(int pid, int tid, int port);
-int check_thread_ioctl(int pid, int tid, int ioctl);
-int check_thread_fcntl(int pid, int tid, int fcntl);
-int check_thread_fork(int pid, int tid);
-int check_thread_all(int pid, int tid);
-int check_sandboxed_process(int pid, int tid);
-
-void perm_ioctl(int pid, int tid, int ioctl);
-void perm_port_listen(int pid, int tid, int port);
-void perm_port_bind(int pid, int tid, int port);
-void perm_fcntl(int pid, int tid, int fcntl);
-void perm_fork(int pid, int tid);
-void perm_disable(int pid, int tid);
-void perm_remove(int pid, int tid);
 void init_list(void);
+int get_thread(int tid, int create);
+int check_process(int pid);
