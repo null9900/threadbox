@@ -3,22 +3,12 @@ import functools
 def sandbox_ps():
     write_to_file("sandbox_ps");
 
-def PERM(permission, options):
+def PERM(promises):
     def decorator(fn):
         @functools.wraps(fn)
         def wrapper(*args, **kwargs):
             try:
-                write_to_file(permission,options);
-                #if permission == "listen_socket":
-                #    write_to_file("listen_socket",options);
-                #if permission == "bind_socket":
-                #    write_to_file("bind_socket",options);
-                #elif permission == "disable_all":
-                #    write_to_file("disable_all");
-                #elif permission == "fork":
-                #    write_to_file("fork");
-                #elif permission == "ioctl":
-                #    write_to_file("ioctl",options)
+                write_to_file("promises",promises);
                 return fn(*args, **kwargs)
             finally:
                 write_to_file("remove_sandbox");

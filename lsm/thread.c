@@ -4,6 +4,9 @@ Thread threads_list[MAX_SIZE];
 int sandboxed_ps[MAX_SIZE];
 int t_index = 0;
 
+char *promises[] = {"stdio","proc","net","id","dpath","cpath","wpath","rpath","unix"};
+const int P_NUM=9;
+
 int get_thread(int tid,int create){
   for(int i=0; i<MAX_SIZE; i++){
     if(threads_list[i].tid == tid){

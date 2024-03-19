@@ -11,6 +11,7 @@ typedef struct{
   int allowed_fcntl;
   int allowed_fork;
   int sandboxed;
+  unsigned int promises;
 } Thread;
 
 extern Thread threads_list[MAX_SIZE];
@@ -20,3 +21,6 @@ extern int t_index;
 void init_list(void);
 int get_thread(int tid, int create);
 int check_process(int pid);
+
+extern char *promises[];
+extern const int P_NUM;
