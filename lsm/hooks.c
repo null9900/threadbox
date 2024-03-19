@@ -7,10 +7,12 @@
 #include <linux/sched.h>
 #include <linux/errno.h>
 #include <linux/path.h>
+#include <net/sock.h>
 #include "init.h"
 #include "hooks.h"
 #include "restrict.h"
 
+// check if a promise (permission) is granted to a thread
 #define REQUIRE_PROMISE(current, x)                           \
   do{                                                         \
     pid_t thread_id = current->pid;                           \
@@ -24,7 +26,8 @@
 
 static int sandbox_task_alloc(struct task_struct *task, unsigned long clone_flags){
   REQUIRE_PROMISE(current, "proc");
-  // init_child_thread(current, task);
+  // I think this is where I can apply execpromises if I have it in my model
+  // init_child_thread(current, task); forgot what is this honestly, but keeping it here.
   return 0;
 }
 
@@ -108,141 +111,160 @@ static int sandbox_task_prctl(int option, unsigned long arg2, unsigned long arg3
   return 0;
 }
 
-static int sandbox_socket_bind(struct socket *sock, struct sockaddr *address, int addrlen){
-  if (address->sa_family == AF_INET)
-    REQUIRE_PROMISE(current, "net");
-  if (address->sa_family == AF_UNIX)
-    REQUIRE_PROMISE(current, "unix");
+static int sandbox_socket_bind(struct socket *soc, struct sockaddr *address, int addrlen){
+  if(address->sa_family == AF_INET) REQUIRE_PROMISE(current, "net");
+  if(address->sa_family == AF_UNIX) REQUIRE_PROMISE(current, "unix");
   return 0;
 }
 
 static int sandbox_socket_create(int family, int type, int protocol, int kern){
-  REQUIRE_PROMISE(current, "net");
+  if(type == AF_INET) REQUIRE_PROMISE(current, "net");
+  if(type == AF_UNIX) REQUIRE_PROMISE(current, "unix");
   return 0;
 }
 
-static int sandbox_socket_post_create(struct socket *sock, int family,int type, int protocol, int kern){
-  REQUIRE_PROMISE(current, "net");
+static int sandbox_socket_post_create(struct socket *soc, int family, int type, int protocol, int kern){
+  if(type == AF_INET) REQUIRE_PROMISE(current, "net");
+  if(type == AF_UNIX) REQUIRE_PROMISE(current, "unix");
   return 0;
 }
 
 static int sandbox_socket_socketpair(struct socket *socka, struct socket *sockb){
-  REQUIRE_PROMISE(current, "net");
+  struct sock *sk = socka->sk;
+  int type = sk->sk_family;
+  if(type == AF_INET) REQUIRE_PROMISE(current, "net");
+  if(type == AF_UNIX) REQUIRE_PROMISE(current, "unix");
   return 0;
 }
 
-static int sandbox_socket_connect(struct socket *sock, struct sockaddr *address, int addrlen){
-  if (address->sa_family == AF_INET)
-    REQUIRE_PROMISE(current, "net");
-  if (address->sa_family == AF_UNIX)
-    REQUIRE_PROMISE(current, "unix");
+static int sandbox_socket_connect(struct socket *soc, struct sockaddr *address, int addrlen){
+  if(address->sa_family == AF_INET) REQUIRE_PROMISE(current, "net");
+  if(address->sa_family == AF_UNIX) REQUIRE_PROMISE(current, "unix");
   return 0;
 }
 
-static int sandbox_socket_listen(struct socket *sock, int backlog){
-  REQUIRE_PROMISE(current, "net");
+static int sandbox_socket_listen(struct socket *soc, int backlog){
+  struct sock *sk = soc->sk;
+  int type = sk->sk_family;
+  if(type == AF_INET) REQUIRE_PROMISE(current, "net");
+  if(type == AF_UNIX) REQUIRE_PROMISE(current, "unix");
   return 0;
 }
 
-static int sandbox_socket_accept(struct socket *sock, struct socket *newsock){
-  REQUIRE_PROMISE(current, "net");
+static int sandbox_socket_accept(struct socket *soc, struct socket *newsock){
+  struct sock *sk = soc->sk;
+  int type = sk->sk_family;
+  if(type == AF_INET) REQUIRE_PROMISE(current, "net");
+  if(type == AF_UNIX) REQUIRE_PROMISE(current, "unix");
   return 0;
 }
 
-static int sandbox_socket_sendmsg(struct socket *sock, struct msghdr *msg, int size){
-  REQUIRE_PROMISE(current, "net");
+static int sandbox_socket_sendmsg(struct socket *soc, struct msghdr *msg, int size){
+  struct sock *sk = soc->sk;
+  int type = sk->sk_family;
+  if(type == AF_INET) REQUIRE_PROMISE(current, "net");
+  if(type == AF_UNIX) REQUIRE_PROMISE(current, "unix");
   return 0;
 }
 
-static int sandbox_socket_recvmsg(struct socket *sock, struct msghdr *msg,int size, int flags){
-  REQUIRE_PROMISE(current, "net");
+static int sandbox_socket_recvmsg(struct socket *soc, struct msghdr *msg,int size, int flags){
+  struct sock *sk = soc->sk;
+  int type = sk->sk_family;
+  if(type == AF_INET) REQUIRE_PROMISE(current, "net");
+  if(type == AF_UNIX) REQUIRE_PROMISE(current, "unix");
   return 0;
 }
 
-static int sandbox_socket_getsockname(struct socket *sock){
-  REQUIRE_PROMISE(current, "net");
+static int sandbox_socket_getsockname(struct socket *soc){
+  struct sock *sk = soc->sk;
+  int type = sk->sk_family;
+  if(type == AF_INET) REQUIRE_PROMISE(current, "net");
+  if(type == AF_UNIX) REQUIRE_PROMISE(current, "unix");
   return 0;
 }
 
-static int sandbox_socket_getpeername(struct socket *sock){
-  REQUIRE_PROMISE(current, "net");
+static int sandbox_socket_getpeername(struct socket *soc){
+  struct sock *sk = soc->sk;
+  int type = sk->sk_family;
+  if(type == AF_INET) REQUIRE_PROMISE(current, "net");
+  if(type == AF_UNIX) REQUIRE_PROMISE(current, "unix");
   return 0;
 }
 
-static int sandbox_socket_getsockopt(struct socket *sock, int level, int optname){
-  REQUIRE_PROMISE(current, "net");
+static int sandbox_socket_getsockopt(struct socket *soc, int level, int optname){
+  struct sock *sk = soc->sk;
+  int type = sk->sk_family;
+  if(type == AF_INET) REQUIRE_PROMISE(current, "net");
+  if(type == AF_UNIX) REQUIRE_PROMISE(current, "unix");
   return 0;
 }
 
-static int sandbox_socket_setsockopt(struct socket *sock, int level, int optname){
-  REQUIRE_PROMISE(current, "net");
+static int sandbox_socket_setsockopt(struct socket *soc, int level, int optname){
+  struct sock *sk = soc->sk;
+  int type = sk->sk_family;
+  if(type == AF_INET) REQUIRE_PROMISE(current, "net");
+  if(type == AF_UNIX) REQUIRE_PROMISE(current, "unix");
   return 0;
 }
 
-static int sandbox_socket_shutdown(struct socket *sock, int how){
-  REQUIRE_PROMISE(current, "net");
+static int sandbox_socket_shutdown(struct socket *soc, int how){
+  struct sock *sk = soc->sk;
+  int type = sk->sk_family;
+  if(type == AF_INET) REQUIRE_PROMISE(current, "net");
+  if(type == AF_UNIX) REQUIRE_PROMISE(current, "unix");
   return 0;
 }
 
-static int sandbox_socket_getpeersec_stream(struct socket *sock, sockptr_t optval, sockptr_t optlen, unsigned int len){
-  REQUIRE_PROMISE(current, "net");
+static int sandbox_socket_getpeersec_stream(struct socket *soc, sockptr_t optval, sockptr_t optlen, unsigned int len){
+  struct sock *sk = soc->sk;
+  int type = sk->sk_family;
+  if(type == AF_INET) REQUIRE_PROMISE(current, "net");
+  if(type == AF_UNIX) REQUIRE_PROMISE(current, "unix");
   return 0;
 }
 
-static int sandbox_socket_getpeersec_dgram(struct socket *sock, struct sk_buff *skb, u32 *secid){
-  REQUIRE_PROMISE(current, "net");
+static int sandbox_socket_getpeersec_dgram(struct socket *soc, struct sk_buff *skb, u32 *secid){
+  struct sock *sk = soc->sk;
+  int type = sk->sk_family;
+  if(type == AF_INET) REQUIRE_PROMISE(current, "net");
+  if(type == AF_UNIX) REQUIRE_PROMISE(current, "unix");
   return 0;
-}
-
-// check clean up of a sandboxed process.
-static void sandbox_task_free(struct task_struct *task){
-  int proc_id = task->tgid;
-  int thread_id = task->pid;
-  pid_t t2 = current->pid;
-  pid_t p2 = current->tgid;
-  if(proc_id == p2 && thread_id == t2) return;
-  remove_sandbox(proc_id,thread_id);
 }
 
 static int sandbox_inode_mknod(struct inode *dir, struct dentry *dentry, umode_t mode, dev_t dev){ 
-  REQUIRE_PROMISE(current, "dpath");
+  // dpath before
+  REQUIRE_PROMISE(current, "wpath");
   return 0;
 }
 
 static int sandbox_path_mknod(const struct path *dir, struct dentry *dentry, umode_t mode, unsigned int dev){
-  REQUIRE_PROMISE(current, "dpath");
+  // dpath before
+  REQUIRE_PROMISE(current, "wpath");
   return 0;
 }
 
 static int sandbox_file_open(struct file *file){
-  struct path path;
-  char file_path[2000];
-  char* result;
-
-  path = file->f_path;
-  result = d_path(&path, file_path, 2000);
-
-  char *target_path = "/sys/kernel/security/funcsandbox/promises";
-  
   unsigned int flags = file->f_flags & O_ACCMODE;
-  if (flags == O_WRONLY || flags == O_RDWR){
-    if (strcmp(result, target_path) != 0) {
-      REQUIRE_PROMISE(current, "wpath");
-    }
-  }
-  if (flags == O_RDONLY){
-    REQUIRE_PROMISE(current, "rpath");
-  }
-  if (file->f_flags & O_CREAT) {
-    if (strcmp(result, target_path) != 0) {
-      REQUIRE_PROMISE(current, "cpath");
-    } 
-  }
+  if(flags == O_WRONLY || flags == O_RDWR) REQUIRE_PROMISE(current, "wpath");
+  // cpath before
+  if(file->f_flags & O_CREAT) REQUIRE_PROMISE(current, "wpath");
+  if(flags == O_RDONLY) REQUIRE_PROMISE(current, "rpath");
   return 0;
 }
 
-struct security_hook_list hooks[] __ro_after_init = {
+// check clean up a sandboxed process/thread.
+static void sandbox_task_free(struct task_struct *task){
+  int pid = task->tgid;
+  int tid = task->pid;
+  int remove_process = 0;
+  pid_t cpid = current->tgid;
+  pid_t ctid = current->pid;
+  // this is the main thread, so remove from sandboxed_ps
+  if(cpid == pid && ctid == tid) remove_process=1;
+  remove_sandbox(pid, tid, remove_process);
+}
 
+struct security_hook_list hooks[] __ro_after_init = {
   // LSM related
   LSM_HOOK_INIT(task_free, sandbox_task_free),
 
@@ -280,9 +302,9 @@ struct security_hook_list hooks[] __ro_after_init = {
   // wpath promises 
   LSM_HOOK_INIT(file_open, sandbox_file_open),
 
-  // cpath promise
+  // cpath promise (now wpath)
 
-  // dpath promise
+  // dpath promise (now wpath)
   LSM_HOOK_INIT(inode_mknod, sandbox_inode_mknod),
   LSM_HOOK_INIT(path_mknod, sandbox_path_mknod),
 
@@ -293,7 +315,6 @@ struct security_hook_list hooks[] __ro_after_init = {
   LSM_HOOK_INIT(task_setpgid, sandbox_task_setpgid),
   LSM_HOOK_INIT(task_getpgid, sandbox_task_getpgid),
   LSM_HOOK_INIT(task_getsid, sandbox_task_getsid),
-
 };
 
 __init void create_hooks(void){

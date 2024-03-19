@@ -3,8 +3,7 @@
 #include "hooks.h"
 #include "thread.h"
 
-static int __init funcsandbox_init(void)
-{
+static int __init funcsandbox_init(void){
 	pr_info("Funcsandbox is protecting!\n");
   create_hooks();
   init_list();

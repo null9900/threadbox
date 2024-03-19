@@ -2,39 +2,50 @@
 
 Thread threads_list[MAX_SIZE];
 int sandboxed_ps[MAX_SIZE];
-int t_index = 0;
 
-char *promises[] = {"stdio","proc","net","id","dpath","cpath","wpath","rpath","unix"};
-const int P_NUM=9;
+char *promises[] = {"proc","net","id","wpath","rpath","unix"};
+const int P_NUM=6;
 
-int get_thread(int tid,int create){
+// check if thread is sandboxed and return its index
+int get_thread(int tid, int pid, int create){
+  // check if thread exists, return its index
   for(int i=0; i<MAX_SIZE; i++){
-    if(threads_list[i].tid == tid){
+    if(threads_list[i].tid == tid && threads_list[i].pid == pid) return i;
+  }
+  if(!create) return -1;
+  // add new thread if not there
+  // this is in a different loop to avoid TOCTOU
+  // still prone to race conditions but can be solved with a mutex
+  for(int i=0; i<MAX_SIZE; i++){
+    if(threads_list[i].tid == -1){
+      threads_list[i].tid = tid;
+      threads_list[i].pid = pid;
+      return i;
+    }
+  } 
+  return -1;
+}
+
+// check if process is sandboxed and return its index
+int get_process(int pid,int create){
+  for(int i=0; i<MAX_SIZE; i++){
+    if(sandboxed_ps[i]==pid) return i;
+  }
+  if(!create) return -1;
+  for(int i=0; i<MAX_SIZE; i++){
+    if(sandboxed_ps[i]==-1){
+      sandboxed_ps[i]=pid;
       return i;
     }
   }
-  if(t_index==MAX_SIZE) return -1;
-  if(!create)
-    return -1;
-  threads_list[t_index].tid = tid;
-  int to_return = t_index;
-  t_index++;
-  return to_return;
-}
-
-int check_process(int pid){
-  for(int i =0;i<MAX_SIZE;i++){
-    if(sandboxed_ps[i]==pid)
-      return 1;
-  }
-  return 0;
+  return -1;
 }
 
 void init_list(){ 
   for(int i=0; i<MAX_SIZE; i++){
     threads_list[i].tid = -1;
-    threads_list[i].sandboxed = -1;
-    threads_list[i].disable_all = 1;
+    threads_list[i].pid = -1;
+    threads_list[i].sandboxed = 0;
     sandboxed_ps[i] = -1;
   }
 }

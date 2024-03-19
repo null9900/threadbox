@@ -6,81 +6,75 @@
 #include <linux/slab.h>
 #include <linux/sched/signal.h>
 
+// return promise id (number)
 static int get_promise_id(char* promise){
   for(int i =0;i<P_NUM;i++){
-    if( strncmp(promise,promises[i], strlen(promises[i]))==0){
-      return i;
-    }
+    if(strncmp(promise,promises[i], strlen(promises[i]))==0) return i;
   }
   return -1;
 }
 
 void debug(){ 
-  for(int i=0; i<t_index; i++){
-    pr_info("thread index %d id %d promises %d\n",i,threads_list[i].tid,threads_list[i].promises);
+  for(int i=0; i<MAX_SIZE; i++){
+    if(threads_list[i].tid!=-1)
+      pr_info("thread index %d id %d promises %d\n",i,threads_list[i].tid,threads_list[i].promises);
   }
 }
 
-int add_sandbox_ps(int pid, int tid, char *promises){
-  for(int i =0;i<MAX_SIZE;i++){
-    if(sandboxed_ps[i]==-1){
-      sandboxed_ps[i]=pid;
-      int index = get_thread(tid,1);
-      threads_list[index].sandboxed = 0;
-      threads_list[index].promises = 0;
-      parse_promises(pid, tid, promises);
-      return 1;
-    }
-  }
-  return 0;
+// track that a process declared to be sandboxed
+int add_sandbox_ps(int pid){
+  return get_process(pid,1);  
 }
 
-void remove_sandbox(int pid, int tid){
-  int ps = check_process(pid);
-  if(ps==0) return;
-  int index = get_thread(tid,0);
+// untrack threads/process
+void remove_sandbox(int pid, int tid, int remove_process){
+  int ps = get_process(pid,0);
+  if(ps==-1) return;
+  int index = get_thread(tid, pid, 0);
   if(index==-1) return;
   pr_info("removing sandbox for pid %d tid %d\n",pid, tid);
-  threads_list[index].disable_all = 1;
   threads_list[index].sandboxed = 0;
   threads_list[index].promises = 0;
   threads_list[index].tid = -1;
+  if(remove_process==1) sandboxed_ps[ps] = -1;
 }
 
+// check if a thread has a promise
 int require_promise(int pid, int tid, char* promise){
-  int ps = check_process(pid);
-  if(ps==0) return 1;
-  int index = get_thread(tid,0);
-  if(index == -1) {
-    return 1;
-  }
-  int p_id= get_promise_id(promise);
+  int ps = get_process(pid,0);
+  if(ps==-1) return 1;
+  int index = get_thread(tid, pid, 0);
+  if(index==-1) return 1;
+  int p_id = get_promise_id(promise);
   int result =  threads_list[index].promises & (1 << p_id);
   return result;
 }
 
+// add promises to a thread
 int parse_promises(int pid, int tid, char* promises){
-  int ps = check_process(pid);
-  if(ps==0) return 1;
-  int index = get_thread(tid,1);
+  int ps = get_process(pid,0);
+  if(ps==-1) return 1;
+  int index = get_thread(tid, pid, 1);
   if(index==-1) return 1;
-  if (threads_list[index].sandboxed==1) return 1;
-
+  
   pr_info("parsing prom for pid %d tid %d\n",pid, tid);
   char* copy;
   copy=kstrdup(promises, GFP_KERNEL);
-
   char* tok = copy, *end = copy;
   int new_promises = 0;
+  
   while(tok!=NULL){
     strsep(&end, " ");
     int pi = get_promise_id(tok);
-    if(pi==-1) return -1;
+    // if unknown promise or empty promises then give no permissions
+    if(pi==-1){
+      new_promises = 0;
+      break;
+    }
     new_promises |= (1 << pi);
     tok = end;
   }
   threads_list[index].promises = new_promises;
-  threads_list[index].sandboxed = 1;
   return 0;
 }
 
@@ -89,12 +83,13 @@ void kill_proc(struct task_struct *task){
   send_sig(SIGTERM, task, 1);
 }
 
+// not used now, I have not idea why I wrote this but keeping it in case
 void init_child_thread(struct task_struct *main, struct task_struct *task){
-  int ps = check_process(main->tgid);
-  if(ps==0) return;
+  int ps = get_process(main->tgid,0);
+  if(ps==-1) return;
   if(main->tgid == task->tgid){
     pr_info("setting default perm for %d %d\n", task->tgid, task->pid);
-    int index = get_thread(task->pid,1);
+    int index = get_thread(task->pid, main->tgid, 1);
     threads_list[index].sandboxed = 0;
     threads_list[index].promises = 0;
   }
