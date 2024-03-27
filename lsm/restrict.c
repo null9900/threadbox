@@ -31,18 +31,14 @@ void remove_sandbox(int pid, int tid, int remove_process){
   threads_list[index].tid = -1;
   threads_list[index].pid = -1;
   threads_list[index].debug = 0;
+  threads_list[index].learning_mode = 0;
   if(remove_process==1) sandboxed_ps[ps] = -1;
 }
 
 // check if a thread has a promise
-int require_promise(int pid, int tid, char* promise){
-  int ps = get_process(pid,0);
-  if(ps==-1) return 1;
-  int index = get_thread(tid, pid, 0);
-  if(index==-1) return 1;
+int require_promise(int index, char* promise){
   int p_id = get_promise_id(promise);
-  int result =  threads_list[index].promises & (1 << p_id);
-  return result;
+  return  threads_list[index].promises & (1 << p_id);
 }
 
 // add promises to a thread

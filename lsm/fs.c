@@ -34,6 +34,13 @@ static ssize_t funcsandbox_debug(struct file *file, const char __user *buf, size
   return count;
 }
 
+static ssize_t funcsandbox_learning_mode(struct file *file, const char __user *buf, size_t count, loff_t *ppos){
+  pid_t pid = current->tgid;
+  pid_t tid = current->pid;
+  set_learning_mode(pid, tid);
+  return count;
+}
+
 const struct file_operations promises_ops = {
   .write	= add_promises,
   .llseek = generic_file_llseek
@@ -49,11 +56,17 @@ const struct file_operations debug_ops = {
   .llseek = generic_file_llseek
 };
 
+const struct file_operations learning_mode_ops = {
+  .write	= funcsandbox_learning_mode,
+  .llseek = generic_file_llseek
+};
+
 static __init int create_fs_nodes(void){
   struct dentry *funcsandbox_dir = securityfs_create_dir(FS_FOLDER_NAME, NULL);
 	securityfs_create_file("promises", 0666, funcsandbox_dir, NULL, &promises_ops);
 	securityfs_create_file("sandbox_ps", 0666, funcsandbox_dir, NULL, &ps_sandbox_ops);
 	securityfs_create_file("debug", 0666, funcsandbox_dir, NULL, &debug_ops);
+	securityfs_create_file("learning_mode", 0666, funcsandbox_dir, NULL, &learning_mode_ops);
   return 0;
 }
 

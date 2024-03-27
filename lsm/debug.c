@@ -1,11 +1,14 @@
 #include "debug.h"
 #include "thread.h"
 #include <linux/string.h>
-#include <linux/fs.h>
-#include <linux/slab.h>
-#include <linux/uaccess.h>
-#include <linux/path.h>
-#include <linux/namei.h>
+
+void set_learning_mode(int pid, int tid){
+  int ps = get_process(pid,0);
+  if(ps==-1) return;
+  int index = get_thread(tid, pid, 0);
+  if(index==-1) return;
+  threads_list[index].learning_mode = 1;
+}
 
 void set_debug_name(int pid, int tid, char* name, int count){ 
   int ps = get_process(pid,0);
@@ -16,13 +19,8 @@ void set_debug_name(int pid, int tid, char* name, int count){
   threads_list[index].debug = 1;
 }
 
-void debug(int tid, int pid, char* promise){
-  int index = get_thread(tid, pid, 0);
-  if(index==-1) return;
-  if(threads_list[index].debug==0){
-    pr_info("%s access is deined for thread %d\n", promise, tid);
-  }else{
-    char* debug_name = threads_list[index].debug_name;
-    pr_info("%s access is deined for %s module \n", promise, debug_name);
-  }
+void debug(int index, char* promise, char* action){
+  if(threads_list[index].debug==0) return;
+  char* debug_name = threads_list[index].debug_name;
+  pr_info("%s access is %s for %s module \n", promise, action, debug_name);
 }

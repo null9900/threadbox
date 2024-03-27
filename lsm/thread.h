@@ -9,6 +9,7 @@ typedef struct{
   unsigned int promises;
   char debug_name[MAX_SIZE];
   int debug;
+  int learning_mode;
 } Thread;
 
 extern Thread threads_list[MAX_SIZE];

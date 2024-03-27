@@ -10,19 +10,27 @@
 #include <net/sock.h>
 #include "init.h"
 #include "hooks.h"
+#include "thread.h"
 #include "restrict.h"
 #include "debug.h"
 
 // check if a promise (permission) is granted to a thread
 #define REQUIRE_PROMISE(current, x)                           \
   do{                                                         \
-    pid_t thread_id = current->pid;                           \
-    pid_t tgid = current->tgid;                               \
-    if(require_promise(tgid, thread_id, x) == 0){             \
-      debug(thread_id, tgid, x);                              \
+    pid_t tid = current->pid;                                 \
+    pid_t pid = current->tgid;                                \
+    int index = -1;                                           \
+    int ps = get_process(pid,0);                              \
+    if(ps==-1) return 0;                                      \
+    index = get_thread(tid, pid, 0);                          \
+    if(index==-1) return 0;                                   \
+    if(require_promise(index, x) == 0){                       \
+      debug(index, "denied", x);                              \
+      if(threads_list[index].learning_mode==1) return 0;      \
       kill_proc(current);                                     \
       return -EPERM;                                          \
     }                                                         \
+    debug(index, "allowed", x);                               \
   } while(0)
 
 static int sandbox_task_alloc(struct task_struct *task, unsigned long clone_flags){
