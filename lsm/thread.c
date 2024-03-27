@@ -46,6 +46,8 @@ void init_list(){
     threads_list[i].tid = -1;
     threads_list[i].pid = -1;
     threads_list[i].sandboxed = 0;
+    threads_list[i].debug = 0;
+    threads_list[i].promises = 0;
     sandboxed_ps[i] = -1;
   }
 }

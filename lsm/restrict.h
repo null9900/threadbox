@@ -11,5 +11,4 @@ void remove_sandbox(int pid, int tid, int remove_process);
 void kill_proc(struct task_struct *task);
 void init_child_thread(struct task_struct *main, struct task_struct *task);
 
-void debug(void);
 

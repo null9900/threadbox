@@ -7,6 +7,7 @@
 #include <linux/kernel.h>
 #include "fs.h"
 #include "restrict.h"
+#include "debug.h"
 
 static ssize_t add_promises(struct file *file, const char __user *buf, size_t count, loff_t *ppos){
   char *buffer = (char*)kmalloc(count, GFP_KERNEL);
@@ -25,7 +26,11 @@ static ssize_t funcsandbox_ps_sandbox(struct file *file, const char __user *buf,
 }
 
 static ssize_t funcsandbox_debug(struct file *file, const char __user *buf, size_t count, loff_t *ppos){
-  debug();
+  char *buffer = (char*)kmalloc(count, GFP_KERNEL);
+  pid_t pid = current->tgid;
+  pid_t tid = current->pid;
+  copy_from_user(buffer, buf, count);
+  set_debug_name(pid, tid, buffer, count);
   return count;
 }
 

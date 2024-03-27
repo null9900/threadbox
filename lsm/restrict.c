@@ -14,13 +14,6 @@ static int get_promise_id(char* promise){
   return -1;
 }
 
-void debug(){ 
-  for(int i=0; i<MAX_SIZE; i++){
-    if(threads_list[i].tid!=-1)
-      pr_info("thread index %d id %d promises %d\n",i,threads_list[i].tid,threads_list[i].promises);
-  }
-}
-
 // track that a process declared to be sandboxed
 int add_sandbox_ps(int pid){
   return get_process(pid,1);  
@@ -32,10 +25,12 @@ void remove_sandbox(int pid, int tid, int remove_process){
   if(ps==-1) return;
   int index = get_thread(tid, pid, 0);
   if(index==-1) return;
-  pr_info("removing sandbox for pid %d tid %d\n",pid, tid);
+  //pr_info("removing sandbox for pid %d tid %d\n",pid, tid);
   threads_list[index].sandboxed = 0;
   threads_list[index].promises = 0;
   threads_list[index].tid = -1;
+  threads_list[index].pid = -1;
+  threads_list[index].debug = 0;
   if(remove_process==1) sandboxed_ps[ps] = -1;
 }
 
@@ -57,7 +52,7 @@ int parse_promises(int pid, int tid, char* promises){
   int index = get_thread(tid, pid, 1);
   if(index==-1) return 1;
   
-  pr_info("parsing prom for pid %d tid %d\n",pid, tid);
+  //pr_info("parsing prom for pid %d tid %d\n",pid, tid);
   char* copy;
   copy=kstrdup(promises, GFP_KERNEL);
   char* tok = copy, *end = copy;

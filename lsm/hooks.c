@@ -11,6 +11,7 @@
 #include "init.h"
 #include "hooks.h"
 #include "restrict.h"
+#include "debug.h"
 
 // check if a promise (permission) is granted to a thread
 #define REQUIRE_PROMISE(current, x)                           \
@@ -18,7 +19,7 @@
     pid_t thread_id = current->pid;                           \
     pid_t tgid = current->tgid;                               \
     if(require_promise(tgid, thread_id, x) == 0){             \
-      pr_info("%s access is deined for %d\n", x, thread_id);  \
+      debug(thread_id, tgid, x);                              \
       kill_proc(current);                                     \
       return -EPERM;                                          \
     }                                                         \
@@ -318,6 +319,5 @@ struct security_hook_list hooks[] __ro_after_init = {
 };
 
 __init void create_hooks(void){
-  pr_info("Creating hooks\n");
 	security_add_hooks(hooks, ARRAY_SIZE(hooks), FUNCSANDBOX_NAME);
 }
