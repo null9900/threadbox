@@ -240,12 +240,6 @@ static int sandbox_socket_getpeersec_dgram(struct socket *soc, struct sk_buff *s
   return 0;
 }
 
-static int sandbox_inode_mknod(struct inode *dir, struct dentry *dentry, umode_t mode, dev_t dev){ 
-  // dpath before
-  REQUIRE_PROMISE(current, "wpath");
-  return 0;
-}
-
 static int sandbox_path_mknod(const struct path *dir, struct dentry *dentry, umode_t mode, unsigned int dev){
   // dpath before
   REQUIRE_PROMISE(current, "wpath");
@@ -259,6 +253,51 @@ static int sandbox_file_open(struct file *file){
   if(file->f_flags & O_CREAT) REQUIRE_PROMISE(current, "wpath");
   if(flags == O_RDONLY) REQUIRE_PROMISE(current, "rpath");
   return 0;
+}
+
+int sandbox_path_mkdir(const struct path *dir, struct dentry *dentry, umode_t mode){ 
+  REQUIRE_PROMISE(current, "wpath");
+  return 0;
+}
+
+int sandbox_path_rmdir(const struct path *dir, struct dentry *dentry){
+  REQUIRE_PROMISE(current, "wpath");
+  return 0;
+}
+
+int sandbox_path_symlink(const struct path *dir, struct dentry *dentry, const char *old_name){
+  REQUIRE_PROMISE(current, "wpath");
+  return 0; 
+}
+
+int sandbox_path_link(struct dentry *old_dentry, const struct path *new_dir, struct dentry *new_dentry){
+  REQUIRE_PROMISE(current, "wpath");
+  return 0; 
+}
+
+int sandbox_path_unlink(const struct path *dir, struct dentry *dentry){
+  REQUIRE_PROMISE(current, "wpath");
+  return 0; 
+}
+
+int sandbox_path_rename(const struct path *old_dir, struct dentry *old_dentry, const struct path *new_dir, struct dentry *new_dentry, unsigned int flags){
+  REQUIRE_PROMISE(current, "wpath");
+  return 0; 
+}
+
+int sandbox_path_truncate(const struct path *path){
+  REQUIRE_PROMISE(current, "wpath");
+  return 0; 
+}
+
+int sandbox_path_chmod(const struct path *path, umode_t mode){
+  REQUIRE_PROMISE(current, "wpath");
+  return 0; 
+}
+
+int sandbox_path_chown(const struct path *path, kuid_t uid, kgid_t gid){
+  REQUIRE_PROMISE(current, "wpath");
+  return 0; 
 }
 
 // check clean up a sandboxed process/thread.
@@ -310,12 +349,17 @@ struct security_hook_list hooks[] __ro_after_init = {
 
   // wpath promises 
   LSM_HOOK_INIT(file_open, sandbox_file_open),
-
-  // cpath promise (now wpath)
-
-  // dpath promise (now wpath)
-  LSM_HOOK_INIT(inode_mknod, sandbox_inode_mknod),
+  LSM_HOOK_INIT(path_mkdir, sandbox_path_mkdir),
+  LSM_HOOK_INIT(path_rmdir, sandbox_path_rmdir),
+  LSM_HOOK_INIT(path_unlink, sandbox_path_unlink),
+  LSM_HOOK_INIT(path_symlink, sandbox_path_symlink),
+  LSM_HOOK_INIT(path_link, sandbox_path_link),
+  LSM_HOOK_INIT(path_rename, sandbox_path_rename),
+  LSM_HOOK_INIT(path_truncate, sandbox_path_truncate),
+  LSM_HOOK_INIT(path_chmod, sandbox_path_chmod),
+  LSM_HOOK_INIT(path_chown, sandbox_path_chown),
   LSM_HOOK_INIT(path_mknod, sandbox_path_mknod),
+  //LSM_HOOK_INIT(inode_mknod, sandbox_inode_mknod),
 
   // id promise
   LSM_HOOK_INIT(task_fix_setuid, sandbox_task_fix_setuid),
