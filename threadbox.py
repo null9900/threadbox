@@ -7,7 +7,7 @@ def sandbox_ps():
     send_to_lsm("sandbox_ps", "", False, False);
 
 def permissions(promises, debug=False, learning_mode=False):
-    send_to_lsm("promises", promises, debug);
+    send_to_lsm("promises", promises, debug, learning_mode);
 
 def run_function(fn, promises, debug, learning_mode, args):
     send_to_lsm("promises", promises, debug, learning_mode);
@@ -21,7 +21,7 @@ def sandbox_function(promises, debug=False, learning_mode=False):
                 with concurrent.futures.ThreadPoolExecutor() as executor:
                     future = executor.submit(run_function, fn, promises, debug, learning_mode, args)
                     return future.result()
-            except:
+            except Exception as err:
                 print(err)
         return wrapper
     return decorator
@@ -35,7 +35,7 @@ def send_to_lsm(file, data, debug, learning_mode):
         data = " "
     f.write(str(data))
     if debug:
-        d.write(debug);
+        d.write(str(debug));
     if learning_mode:
         l.write("1");
     f.close()
