@@ -3,8 +3,8 @@
 Thread threads_list[MAX_SIZE];
 int sandboxed_ps[MAX_SIZE];
 
-char *promises[] = {"proc","net","id","wpath","rpath","unix"};
-const int P_NUM=6;
+char *promises[] = {"proc","net","id","wpath","rpath","unix", "threading"};
+const int P_NUM=7;
 
 // check if thread is sandboxed and return its index
 int get_thread(int tid, int pid, int create){

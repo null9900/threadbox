@@ -15,7 +15,7 @@
 #include "debug.h"
 
 // check if a promise (permission) is granted to a thread
-#define REQUIRE_PROMISE(current, x)                           \
+#define CHECK_NEEDED_PROMISE(current, x)                      \
   do{                                                         \
     pid_t tid = current->pid;                                 \
     pid_t pid = current->tgid;                                \
@@ -34,269 +34,272 @@
   } while(0)
 
 static int sandbox_task_alloc(struct task_struct *task, unsigned long clone_flags){
-  REQUIRE_PROMISE(current, "proc");
+  if (clone_flags & CLONE_THREAD) 
+    CHECK_NEEDED_PROMISE(current, "threading");
+  else 
+    CHECK_NEEDED_PROMISE(current, "proc");
   // I think this is where I can apply execpromises if I have it in my model
   // init_child_thread(current, task); forgot what is this honestly, but keeping it here.
   return 0;
 }
 
 static int sandbox_task_fix_setuid(struct cred *new, const struct cred *old, int flags){
-  REQUIRE_PROMISE(current, "id");
+  CHECK_NEEDED_PROMISE(current, "id");
   return 0;
 }
 
 static int sandbox_task_fix_setgid(struct cred *new, const struct cred *old,int flags){
-  REQUIRE_PROMISE(current, "id");
+  CHECK_NEEDED_PROMISE(current, "id");
   return 0;
 }
 
 static int sandbox_task_fix_setgroups(struct cred *new, const struct cred *old){
-  REQUIRE_PROMISE(current, "id");
+  CHECK_NEEDED_PROMISE(current, "id");
   return 0;
 }
 
 static int sandbox_task_setpgid(struct task_struct *p, pid_t pgid){
-  REQUIRE_PROMISE(current, "id");
+  CHECK_NEEDED_PROMISE(current, "id");
   return 0;
 }
 
 static int sandbox_task_getpgid(struct task_struct *p){
-  REQUIRE_PROMISE(current, "id");
+  CHECK_NEEDED_PROMISE(current, "id");
   return 0;
 }
 
 static int sandbox_task_getsid(struct task_struct *p){
-  REQUIRE_PROMISE(current, "id");
+  CHECK_NEEDED_PROMISE(current, "id");
   return 0;
 }
 
 static int sandbox_task_setnice(struct task_struct *p, int nice){
-  REQUIRE_PROMISE(current, "proc");
+  CHECK_NEEDED_PROMISE(current, "proc");
   return 0;
 }
 
 static int sandbox_task_setioprio(struct task_struct *p, int ioprio){
-  REQUIRE_PROMISE(current, "proc");
+  CHECK_NEEDED_PROMISE(current, "proc");
   return 0;
 }
 
 static int sandbox_task_getioprio(struct task_struct *p){
-  REQUIRE_PROMISE(current, "proc");
+  CHECK_NEEDED_PROMISE(current, "proc");
   return 0;
 }
 
 static int sandbox_task_prlimit(const struct cred *cred, const struct cred *tcred, unsigned int flags){
-  REQUIRE_PROMISE(current, "proc");
+  CHECK_NEEDED_PROMISE(current, "proc");
   return 0;
 }
 
 static int sandbox_task_setrlimit(struct task_struct *p, unsigned int resource, struct rlimit *new_rlim){
-  REQUIRE_PROMISE(current, "proc");
+  CHECK_NEEDED_PROMISE(current, "proc");
   return 0;
 }
 
 static int sandbox_task_setscheduler(struct task_struct *p){
-  REQUIRE_PROMISE(current, "proc");
+  CHECK_NEEDED_PROMISE(current, "proc");
   return 0;
 }
 
 static int sandbox_task_getscheduler(struct task_struct *p){
-  REQUIRE_PROMISE(current, "proc");
+  CHECK_NEEDED_PROMISE(current, "proc");
   return 0;
 }
 
 static int sandbox_task_movememory(struct task_struct *p){
-  REQUIRE_PROMISE(current, "proc");
+  CHECK_NEEDED_PROMISE(current, "proc");
   return 0;
 }
 
 static int sandbox_task_kill(struct task_struct *p, struct kernel_siginfo *info, int sig, const struct cred *cred){
-  REQUIRE_PROMISE(current, "proc");
+  CHECK_NEEDED_PROMISE(current, "proc");
   return 0;
 }
 
 static int sandbox_task_prctl(int option, unsigned long arg2, unsigned long arg3, unsigned long arg4, unsigned long arg5){
-  REQUIRE_PROMISE(current, "proc");
+  CHECK_NEEDED_PROMISE(current, "proc");
   return 0;
 }
 
 static int sandbox_socket_bind(struct socket *soc, struct sockaddr *address, int addrlen){
-  if(address->sa_family == AF_INET) REQUIRE_PROMISE(current, "net");
-  if(address->sa_family == AF_UNIX) REQUIRE_PROMISE(current, "unix");
+  if(address->sa_family == AF_INET) CHECK_NEEDED_PROMISE(current, "net");
+  if(address->sa_family == AF_UNIX) CHECK_NEEDED_PROMISE(current, "unix");
   return 0;
 }
 
 static int sandbox_socket_create(int family, int type, int protocol, int kern){
-  if(type == AF_INET) REQUIRE_PROMISE(current, "net");
-  if(type == AF_UNIX) REQUIRE_PROMISE(current, "unix");
+  if(type == AF_INET) CHECK_NEEDED_PROMISE(current, "net");
+  if(type == AF_UNIX) CHECK_NEEDED_PROMISE(current, "unix");
   return 0;
 }
 
 static int sandbox_socket_post_create(struct socket *soc, int family, int type, int protocol, int kern){
-  if(type == AF_INET) REQUIRE_PROMISE(current, "net");
-  if(type == AF_UNIX) REQUIRE_PROMISE(current, "unix");
+  if(type == AF_INET) CHECK_NEEDED_PROMISE(current, "net");
+  if(type == AF_UNIX) CHECK_NEEDED_PROMISE(current, "unix");
   return 0;
 }
 
 static int sandbox_socket_socketpair(struct socket *socka, struct socket *sockb){
   struct sock *sk = socka->sk;
   int type = sk->sk_family;
-  if(type == AF_INET) REQUIRE_PROMISE(current, "net");
-  if(type == AF_UNIX) REQUIRE_PROMISE(current, "unix");
+  if(type == AF_INET) CHECK_NEEDED_PROMISE(current, "net");
+  if(type == AF_UNIX) CHECK_NEEDED_PROMISE(current, "unix");
   return 0;
 }
 
 static int sandbox_socket_connect(struct socket *soc, struct sockaddr *address, int addrlen){
-  if(address->sa_family == AF_INET) REQUIRE_PROMISE(current, "net");
-  if(address->sa_family == AF_UNIX) REQUIRE_PROMISE(current, "unix");
+  if(address->sa_family == AF_INET) CHECK_NEEDED_PROMISE(current, "net");
+  if(address->sa_family == AF_UNIX) CHECK_NEEDED_PROMISE(current, "unix");
   return 0;
 }
 
 static int sandbox_socket_listen(struct socket *soc, int backlog){
   struct sock *sk = soc->sk;
   int type = sk->sk_family;
-  if(type == AF_INET) REQUIRE_PROMISE(current, "net");
-  if(type == AF_UNIX) REQUIRE_PROMISE(current, "unix");
+  if(type == AF_INET) CHECK_NEEDED_PROMISE(current, "net");
+  if(type == AF_UNIX) CHECK_NEEDED_PROMISE(current, "unix");
   return 0;
 }
 
 static int sandbox_socket_accept(struct socket *soc, struct socket *newsock){
   struct sock *sk = soc->sk;
   int type = sk->sk_family;
-  if(type == AF_INET) REQUIRE_PROMISE(current, "net");
-  if(type == AF_UNIX) REQUIRE_PROMISE(current, "unix");
+  if(type == AF_INET) CHECK_NEEDED_PROMISE(current, "net");
+  if(type == AF_UNIX) CHECK_NEEDED_PROMISE(current, "unix");
   return 0;
 }
 
 static int sandbox_socket_sendmsg(struct socket *soc, struct msghdr *msg, int size){
   struct sock *sk = soc->sk;
   int type = sk->sk_family;
-  if(type == AF_INET) REQUIRE_PROMISE(current, "net");
-  if(type == AF_UNIX) REQUIRE_PROMISE(current, "unix");
+  if(type == AF_INET) CHECK_NEEDED_PROMISE(current, "net");
+  if(type == AF_UNIX) CHECK_NEEDED_PROMISE(current, "unix");
   return 0;
 }
 
 static int sandbox_socket_recvmsg(struct socket *soc, struct msghdr *msg,int size, int flags){
   struct sock *sk = soc->sk;
   int type = sk->sk_family;
-  if(type == AF_INET) REQUIRE_PROMISE(current, "net");
-  if(type == AF_UNIX) REQUIRE_PROMISE(current, "unix");
+  if(type == AF_INET) CHECK_NEEDED_PROMISE(current, "net");
+  if(type == AF_UNIX) CHECK_NEEDED_PROMISE(current, "unix");
   return 0;
 }
 
 static int sandbox_socket_getsockname(struct socket *soc){
   struct sock *sk = soc->sk;
   int type = sk->sk_family;
-  if(type == AF_INET) REQUIRE_PROMISE(current, "net");
-  if(type == AF_UNIX) REQUIRE_PROMISE(current, "unix");
+  if(type == AF_INET) CHECK_NEEDED_PROMISE(current, "net");
+  if(type == AF_UNIX) CHECK_NEEDED_PROMISE(current, "unix");
   return 0;
 }
 
 static int sandbox_socket_getpeername(struct socket *soc){
   struct sock *sk = soc->sk;
   int type = sk->sk_family;
-  if(type == AF_INET) REQUIRE_PROMISE(current, "net");
-  if(type == AF_UNIX) REQUIRE_PROMISE(current, "unix");
+  if(type == AF_INET) CHECK_NEEDED_PROMISE(current, "net");
+  if(type == AF_UNIX) CHECK_NEEDED_PROMISE(current, "unix");
   return 0;
 }
 
 static int sandbox_socket_getsockopt(struct socket *soc, int level, int optname){
   struct sock *sk = soc->sk;
   int type = sk->sk_family;
-  if(type == AF_INET) REQUIRE_PROMISE(current, "net");
-  if(type == AF_UNIX) REQUIRE_PROMISE(current, "unix");
+  if(type == AF_INET) CHECK_NEEDED_PROMISE(current, "net");
+  if(type == AF_UNIX) CHECK_NEEDED_PROMISE(current, "unix");
   return 0;
 }
 
 static int sandbox_socket_setsockopt(struct socket *soc, int level, int optname){
   struct sock *sk = soc->sk;
   int type = sk->sk_family;
-  if(type == AF_INET) REQUIRE_PROMISE(current, "net");
-  if(type == AF_UNIX) REQUIRE_PROMISE(current, "unix");
+  if(type == AF_INET) CHECK_NEEDED_PROMISE(current, "net");
+  if(type == AF_UNIX) CHECK_NEEDED_PROMISE(current, "unix");
   return 0;
 }
 
 static int sandbox_socket_shutdown(struct socket *soc, int how){
   struct sock *sk = soc->sk;
   int type = sk->sk_family;
-  if(type == AF_INET) REQUIRE_PROMISE(current, "net");
-  if(type == AF_UNIX) REQUIRE_PROMISE(current, "unix");
+  if(type == AF_INET) CHECK_NEEDED_PROMISE(current, "net");
+  if(type == AF_UNIX) CHECK_NEEDED_PROMISE(current, "unix");
   return 0;
 }
 
 static int sandbox_socket_getpeersec_stream(struct socket *soc, sockptr_t optval, sockptr_t optlen, unsigned int len){
   struct sock *sk = soc->sk;
   int type = sk->sk_family;
-  if(type == AF_INET) REQUIRE_PROMISE(current, "net");
-  if(type == AF_UNIX) REQUIRE_PROMISE(current, "unix");
+  if(type == AF_INET) CHECK_NEEDED_PROMISE(current, "net");
+  if(type == AF_UNIX) CHECK_NEEDED_PROMISE(current, "unix");
   return 0;
 }
 
 static int sandbox_socket_getpeersec_dgram(struct socket *soc, struct sk_buff *skb, u32 *secid){
   struct sock *sk = soc->sk;
   int type = sk->sk_family;
-  if(type == AF_INET) REQUIRE_PROMISE(current, "net");
-  if(type == AF_UNIX) REQUIRE_PROMISE(current, "unix");
+  if(type == AF_INET) CHECK_NEEDED_PROMISE(current, "net");
+  if(type == AF_UNIX) CHECK_NEEDED_PROMISE(current, "unix");
   return 0;
 }
 
 static int sandbox_path_mknod(const struct path *dir, struct dentry *dentry, umode_t mode, unsigned int dev){
   // dpath before
-  REQUIRE_PROMISE(current, "wpath");
+  CHECK_NEEDED_PROMISE(current, "wpath");
   return 0;
 }
 
 static int sandbox_file_open(struct file *file){
   unsigned int flags = file->f_flags & O_ACCMODE;
-  if(flags == O_WRONLY || flags == O_RDWR) REQUIRE_PROMISE(current, "wpath");
+  if(flags == O_WRONLY || flags == O_RDWR) CHECK_NEEDED_PROMISE(current, "wpath");
   // cpath before
-  if(file->f_flags & O_CREAT) REQUIRE_PROMISE(current, "wpath");
-  if(flags == O_RDONLY) REQUIRE_PROMISE(current, "rpath");
+  if(file->f_flags & O_CREAT) CHECK_NEEDED_PROMISE(current, "wpath");
+  if(flags == O_RDONLY) CHECK_NEEDED_PROMISE(current, "rpath");
   return 0;
 }
 
 int sandbox_path_mkdir(const struct path *dir, struct dentry *dentry, umode_t mode){ 
-  REQUIRE_PROMISE(current, "wpath");
+  CHECK_NEEDED_PROMISE(current, "wpath");
   return 0;
 }
 
 int sandbox_path_rmdir(const struct path *dir, struct dentry *dentry){
-  REQUIRE_PROMISE(current, "wpath");
+  CHECK_NEEDED_PROMISE(current, "wpath");
   return 0;
 }
 
 int sandbox_path_symlink(const struct path *dir, struct dentry *dentry, const char *old_name){
-  REQUIRE_PROMISE(current, "wpath");
+  CHECK_NEEDED_PROMISE(current, "wpath");
   return 0; 
 }
 
 int sandbox_path_link(struct dentry *old_dentry, const struct path *new_dir, struct dentry *new_dentry){
-  REQUIRE_PROMISE(current, "wpath");
+  CHECK_NEEDED_PROMISE(current, "wpath");
   return 0; 
 }
 
 int sandbox_path_unlink(const struct path *dir, struct dentry *dentry){
-  REQUIRE_PROMISE(current, "wpath");
+  CHECK_NEEDED_PROMISE(current, "wpath");
   return 0; 
 }
 
 int sandbox_path_rename(const struct path *old_dir, struct dentry *old_dentry, const struct path *new_dir, struct dentry *new_dentry, unsigned int flags){
-  REQUIRE_PROMISE(current, "wpath");
+  CHECK_NEEDED_PROMISE(current, "wpath");
   return 0; 
 }
 
 int sandbox_path_truncate(const struct path *path){
-  REQUIRE_PROMISE(current, "wpath");
+  CHECK_NEEDED_PROMISE(current, "wpath");
   return 0; 
 }
 
 int sandbox_path_chmod(const struct path *path, umode_t mode){
-  REQUIRE_PROMISE(current, "wpath");
+  CHECK_NEEDED_PROMISE(current, "wpath");
   return 0; 
 }
 
 int sandbox_path_chown(const struct path *path, kuid_t uid, kgid_t gid){
-  REQUIRE_PROMISE(current, "wpath");
+  CHECK_NEEDED_PROMISE(current, "wpath");
   return 0; 
 }
 
@@ -338,12 +341,12 @@ struct security_hook_list hooks[] __ro_after_init = {
   LSM_HOOK_INIT(task_alloc, sandbox_task_alloc),
   LSM_HOOK_INIT(task_setnice, sandbox_task_setnice),
   LSM_HOOK_INIT(task_setioprio, sandbox_task_setioprio),
-  LSM_HOOK_INIT(task_getioprio, sandbox_task_getioprio),
+  //LSM_HOOK_INIT(task_getioprio, sandbox_task_getioprio),
   LSM_HOOK_INIT(task_prlimit, sandbox_task_prlimit),
   LSM_HOOK_INIT(task_setrlimit, sandbox_task_setrlimit),
   LSM_HOOK_INIT(task_setscheduler, sandbox_task_setscheduler),
-  LSM_HOOK_INIT(task_getscheduler, sandbox_task_getscheduler),
-  LSM_HOOK_INIT(task_movememory, sandbox_task_movememory),
+  //LSM_HOOK_INIT(task_getscheduler, sandbox_task_getscheduler),
+  //LSM_HOOK_INIT(task_movememory, sandbox_task_movememory),
   LSM_HOOK_INIT(task_kill, sandbox_task_kill),
   LSM_HOOK_INIT(task_prctl, sandbox_task_prctl),
 
