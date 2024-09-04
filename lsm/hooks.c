@@ -130,14 +130,14 @@ static int sandbox_socket_bind(struct socket *soc, struct sockaddr *address, int
 }
 
 static int sandbox_socket_create(int family, int type, int protocol, int kern){
-  if(type == AF_INET) CHECK_NEEDED_PROMISE(current, "net");
-  if(type == AF_UNIX) CHECK_NEEDED_PROMISE(current, "unix");
+  if(family == AF_INET) CHECK_NEEDED_PROMISE(current, "net");
+  if(family == AF_UNIX) CHECK_NEEDED_PROMISE(current, "unix");
   return 0;
 }
 
 static int sandbox_socket_post_create(struct socket *soc, int family, int type, int protocol, int kern){
-  if(type == AF_INET) CHECK_NEEDED_PROMISE(current, "net");
-  if(type == AF_UNIX) CHECK_NEEDED_PROMISE(current, "unix");
+  if(family == AF_INET) CHECK_NEEDED_PROMISE(current, "net");
+  if(family == AF_UNIX) CHECK_NEEDED_PROMISE(current, "unix");
   return 0;
 }
 
@@ -321,7 +321,7 @@ struct security_hook_list hooks[] __ro_after_init = {
 
   // net promise
   LSM_HOOK_INIT(socket_create, sandbox_socket_create),
-  LSM_HOOK_INIT(socket_post_create, sandbox_socket_post_create),
+  //LSM_HOOK_INIT(socket_post_create, sandbox_socket_post_create),
   LSM_HOOK_INIT(socket_socketpair, sandbox_socket_socketpair),
   LSM_HOOK_INIT(socket_connect, sandbox_socket_connect),
   LSM_HOOK_INIT(socket_bind, sandbox_socket_bind),
