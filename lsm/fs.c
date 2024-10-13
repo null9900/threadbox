@@ -9,6 +9,8 @@
 #include "restrict.h"
 #include "debug.h"
 
+// Learning mode field is for the complain feature
+
 static ssize_t add_promises(struct file *file, const char __user *buf, size_t count, loff_t *ppos){
   char *buffer = (char*)kmalloc(count, GFP_KERNEL);
   pid_t pid = current->tgid;

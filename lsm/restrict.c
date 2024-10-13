@@ -1,14 +1,14 @@
-#include "restrict.h"
-#include "thread.h"
 #include <linux/string.h>
 #include <linux/stddef.h>
 #include <linux/kernel.h>
 #include <linux/slab.h>
 #include <linux/sched/signal.h>
+#include "restrict.h"
+#include "thread.h"
 
 // return promise id (number)
 static int get_promise_id(char* promise){
-  for(int i =0;i<P_NUM;i++){
+  for(int i =0; i<P_NUM; i++){
     if(strncmp(promise,promises[i], strlen(promises[i]))==0) return i;
   }
   return -1;
@@ -16,7 +16,7 @@ static int get_promise_id(char* promise){
 
 // track that a process declared to be sandboxed
 int add_sandbox_ps(int pid){
-  return get_process(pid,1);  
+  return get_process(pid, 1);
 }
 
 // untrack threads/process

@@ -1,6 +1,6 @@
+#include <linux/string.h>
 #include "debug.h"
 #include "thread.h"
-#include <linux/string.h>
 
 void set_learning_mode(int pid, int tid){
   int ps = get_process(pid,0);

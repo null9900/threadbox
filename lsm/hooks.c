@@ -321,7 +321,6 @@ struct security_hook_list hooks[] __ro_after_init = {
 
   // net promise
   LSM_HOOK_INIT(socket_create, sandbox_socket_create),
-  //LSM_HOOK_INIT(socket_post_create, sandbox_socket_post_create),
   LSM_HOOK_INIT(socket_socketpair, sandbox_socket_socketpair),
   LSM_HOOK_INIT(socket_connect, sandbox_socket_connect),
   LSM_HOOK_INIT(socket_bind, sandbox_socket_bind),
@@ -341,12 +340,9 @@ struct security_hook_list hooks[] __ro_after_init = {
   LSM_HOOK_INIT(task_alloc, sandbox_task_alloc),
   LSM_HOOK_INIT(task_setnice, sandbox_task_setnice),
   LSM_HOOK_INIT(task_setioprio, sandbox_task_setioprio),
-  //LSM_HOOK_INIT(task_getioprio, sandbox_task_getioprio),
   LSM_HOOK_INIT(task_prlimit, sandbox_task_prlimit),
   LSM_HOOK_INIT(task_setrlimit, sandbox_task_setrlimit),
   LSM_HOOK_INIT(task_setscheduler, sandbox_task_setscheduler),
-  //LSM_HOOK_INIT(task_getscheduler, sandbox_task_getscheduler),
-  //LSM_HOOK_INIT(task_movememory, sandbox_task_movememory),
   LSM_HOOK_INIT(task_kill, sandbox_task_kill),
   LSM_HOOK_INIT(task_prctl, sandbox_task_prctl),
 
@@ -362,7 +358,6 @@ struct security_hook_list hooks[] __ro_after_init = {
   LSM_HOOK_INIT(path_chmod, sandbox_path_chmod),
   LSM_HOOK_INIT(path_chown, sandbox_path_chown),
   LSM_HOOK_INIT(path_mknod, sandbox_path_mknod),
-  //LSM_HOOK_INIT(inode_mknod, sandbox_inode_mknod),
 
   // id promise
   LSM_HOOK_INIT(task_fix_setuid, sandbox_task_fix_setuid),
