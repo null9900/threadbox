@@ -19,8 +19,8 @@ void set_debug_name(int pid, int tid, char* name, int count){
   threads_list[index].debug = 1;
 }
 
-void debug(int index, char* promise, char* action){
+void debug(int index, char* action, char* promise){
   if(threads_list[index].debug==0) return;
   char* debug_name = threads_list[index].debug_name;
-  pr_info("%s access is %s for %s module \n", promise, action, debug_name);
+  pr_info("%s promise: %s for Thread: %s\n",action, promise, debug_name);
 }
