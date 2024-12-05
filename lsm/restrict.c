@@ -66,6 +66,7 @@ int parse_promises(int pid, int tid, char* promises){
     tok = end;
   }
   threads_list[index].promises = new_promises;
+  threads_list[index].sandboxed = 1;
   return 0;
 }
 

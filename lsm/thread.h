@@ -1,15 +1,18 @@
 #pragma once
+
+#include <linux/types.h>
+
 #define MAX_SIZE 100
 #define FILE_NAME_SIZE 100
 
 typedef struct{
   int tid;
   int pid;
-  int sandboxed;
+  u8 sandboxed;
   unsigned int promises;
   char debug_name[MAX_SIZE];
-  int debug;
-  int learning_mode;
+  u8 debug;
+  u8 learning_mode;
 } Thread;
 
 extern Thread threads_list[MAX_SIZE];

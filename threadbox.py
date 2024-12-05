@@ -22,9 +22,12 @@ def sandbox_function(promises, debug=False, learning_mode=False):
                     future = executor.submit(run_function, fn, promises, debug, learning_mode, args)
                     return future.result()
             except Exception as err:
-                print(err)
+                handle_err(err)
         return wrapper
     return decorator
+
+def handle_err(err):
+    print(err)
 
 def send_to_lsm(file, data, debug, learning_mode):
     prctl.set_no_new_privs(1)
