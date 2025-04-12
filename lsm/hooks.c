@@ -24,13 +24,15 @@
     if(ps==-1) return 0;                                      \
     index = get_thread(tid, pid, 0);                          \
     if(index==-1) return 0;                                   \
+    if(threads_list[index].learning_mode==1){                 \
+      debug(index, "allowed", x);                             \
+      return 0;                                               \
+    }                                                         \
     if(require_promise(index, x) == 0){                       \
       debug(index, "denied", x);                              \
-      if(threads_list[index].learning_mode==1) return 0;      \
       kill_proc(current);                                     \
       return -EPERM;                                          \
     }                                                         \
-    debug(index, "allowed", x);                               \
   } while(0)
 
 static int sandbox_task_alloc(struct task_struct *task, unsigned long clone_flags){
